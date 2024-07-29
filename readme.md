@@ -54,6 +54,7 @@ pip install --upgrade anthropic
 - 🔒 Enhanced code execution capabilities with isolated virtual environment
 - 🔄 Process management for long-running code executions
 - 📚 Multi-file reading capability for efficient handling of multiple files simultaneously
+- 🪨 Use your company's AWS account and leverage Claude Sonnet 3.5 via Amazon Bedrock
 
 ## 🛠️ Installation
 
@@ -365,6 +366,17 @@ graph TD
 ## 👥 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+## 🪨 Amazon Bedrock support with Claude Sonnet 3.5 is here
+
+You can now use Claude Engineer with Amazon Bedrock. To use with Amazon Bedrock, make sure your local machine is [authenticated with AWS via the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html). This allows you to use Claude
+
+If your AWS account is configured with IAM Identity Center (AWS SSO), then run the following command to authenticate the AWS CLI:
+```bash
+aws sso login
+```
+
+Make sure to **remove** the `ANTHROPIC_API_KEY` from your `.env` file. If an `ANTHROPIC_API_KEY`, it'll always default to using the API Key first.
 
 ## 🦙 Ollama eng is here
 

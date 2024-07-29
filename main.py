@@ -6,7 +6,7 @@ import base64
 from PIL import Image
 import io
 import re
-from anthropic import Anthropic, APIStatusError, APIError
+from anthropic import Anthropic, AnthropicBedrock, APIStatusError, APIError
 import difflib
 import time
 from rich.console import Console
@@ -262,10 +262,12 @@ def setup_virtual_environment() -> Tuple[str, str]:
         raise
 
 # Initialize the Anthropic client
+client = None
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 if not anthropic_api_key:
-    raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
-client = Anthropic(api_key=anthropic_api_key)
+    client = AnthropicBedrock()
+else:
+    client = Anthropic(api_key=anthropic_api_key)
 
 # Initialize the Tavily client
 tavily_api_key = os.getenv("TAVILY_API_KEY")
