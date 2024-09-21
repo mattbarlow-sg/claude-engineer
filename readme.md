@@ -54,6 +54,7 @@ pip install --upgrade anthropic
 - 🔒 Enhanced code execution capabilities with isolated virtual environment
 - 🔄 Process management for long-running code executions
 - 📚 Multi-file reading capability for efficient handling of multiple files simultaneously
+- 🪨 Use your company's AWS account and leverage Claude Sonnet 3.5 via Amazon Bedrock
 
 ## 🛠️ Installation
 
@@ -365,6 +366,27 @@ graph TD
 ## 👥 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+## 🪨 Amazon Bedrock support with Claude Sonnet 3.5 is here
+
+You can now use Claude Engineer with Amazon Bedrock. To use with Amazon Bedrock, make sure your local machine is [authenticated with AWS via the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html). This allows you to use Claude
+
+If your AWS account is configured with IAM Identity Center (AWS SSO), then run the following command to authenticate the AWS CLI:
+```bash
+aws sso login
+```
+
+Make sure to **remove** the `ANTHROPIC_API_KEY` from your `.env` file. If an `ANTHROPIC_API_KEY`, it'll always default to using the API Key first.
+
+You can customize the model that Amazon Bedrock uses by editing the following lines in the `main.py` file. Claude models used by Amazon Bedrock will start with `anthropic.`:
+```
+MAINMODEL = "claude-3-5-sonnet-20240620" if anthropic_api_key else "anthropic.claude-3-5-sonnet-20240620-v1:0"  # Maintains conversation history and file contents
+
+# Models that don't maintain context (memory is reset after each call)
+TOOLCHECKERMODEL = "claude-3-5-sonnet-20240620" if anthropic_api_key else "anthropic.claude-3-5-sonnet-20240620-v1:0"
+CODEEDITORMODEL = "claude-3-5-sonnet-20240620" if anthropic_api_key else "anthropic.claude-3-5-sonnet-20240620-v1:0"
+CODEEXECUTIONMODEL = "claude-3-5-sonnet-20240620" if anthropic_api_key else "anthropic.claude-3-5-sonnet-20240620-v1:0"
+```
 
 ## 🦙 Ollama eng is here
 
