@@ -703,8 +703,12 @@ async def generate_edit_instructions(file_path, file_content, instructions, proj
         # Update token usage for code editor
         code_editor_tokens['input'] += response.usage.input_tokens
         code_editor_tokens['output'] += response.usage.output_tokens
-        code_editor_tokens['cache_write'] = response.usage.cache_creation_input_tokens
-        code_editor_tokens['cache_read'] = response.usage.cache_read_input_tokens
+        try:
+            main_model_tokens['cache_write'] = response.usage.cache_creation_input_tokens
+            main_model_tokens['cache_read'] = response.usage.cache_read_input_tokens
+        except AttributeError as e:
+            console.print(Panel("Skipping cache assignment due to unsupported feature."))
+        break  # If successful, break out of the retry loop
     
         ai_response_text = response.content[0].text  # Extract the text
     
@@ -1260,8 +1264,11 @@ async def send_to_ai_for_executing(code, execution_result):
         # Update token usage for code execution
         code_execution_tokens['input'] += response.usage.input_tokens
         code_execution_tokens['output'] += response.usage.output_tokens
-        code_execution_tokens['cache_creation'] = response.usage.cache_creation_input_tokens
-        code_execution_tokens['cache_read'] = response.usage.cache_read_input_tokens
+        try:
+            code_execution_tokens['cache_creation'] = response.usage.cache_creation_input_tokens
+            code_execution_tokens['cache_read'] = response.usage.cache_read_input_tokens
+        except AttributeError as e:
+            console.print(Panel("Skipping cache assignment due to unsupported feature."))
 
         analysis = response.content[0].text
 
@@ -1781,8 +1788,11 @@ async def chat_with_claude(user_input, image_path=None, current_iteration=None, 
             # Update token usage for MAINMODEL
             main_model_tokens['input'] += response.usage.input_tokens
             main_model_tokens['output'] += response.usage.output_tokens
-            main_model_tokens['cache_write'] = response.usage.cache_creation_input_tokens
-            main_model_tokens['cache_read'] = response.usage.cache_read_input_tokens
+            try:
+                main_model_tokens['cache_write'] = response.usage.cache_creation_input_tokens
+                main_model_tokens['cache_read'] = response.usage.cache_read_input_tokens
+            except AttributeError as e:
+                console.print(Panel("Skipping cache assignment due to unsupported feature."))
             break  # If successful, break out of the retry loop
         except APIStatusError as e:
             if e.status_code == 429 and attempt < max_retries - 1:
