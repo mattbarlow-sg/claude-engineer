@@ -708,7 +708,6 @@ async def generate_edit_instructions(file_path, file_content, instructions, proj
             main_model_tokens['cache_read'] = response.usage.cache_read_input_tokens
         except AttributeError as e:
             console.print(Panel("Skipping cache assignment due to unsupported feature."))
-        break  # If successful, break out of the retry loop
     
         ai_response_text = response.content[0].text  # Extract the text
     
@@ -1269,7 +1268,6 @@ async def send_to_ai_for_executing(code, execution_result):
             code_execution_tokens['cache_read'] = response.usage.cache_read_input_tokens
         except AttributeError as e:
             console.print(Panel("Skipping cache assignment due to unsupported feature."))
-
         analysis = response.content[0].text
 
         return analysis
