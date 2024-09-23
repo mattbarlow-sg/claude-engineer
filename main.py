@@ -266,8 +266,31 @@ client = None
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 if not anthropic_api_key:
     client = AnthropicBedrock()
+    client_message = client.messages
+    system_body = lambda sp: sp
+    mainmodel_system_body = lambda ci, mi, tools: update_system_prompt(ci, mi)
 else:
     client = Anthropic(api_key=anthropic_api_key)
+    client_message = client.beta.prompt_caching.messages
+    system_body = [
+        {
+            "type": "text",
+            "text": lambda sp: sp,
+            "cache_control": {"type": "ephemeral"}
+        }
+    ]
+    mainmodel_system_body = lambda ci, mi, tools: [
+        {
+            "type": "text",
+            "text": update_system_prompt(ci, mi),
+            "cache_control": {"type": "ephemeral"}
+        },
+        {
+            "type": "text",
+            "text": json.dumps(tools),
+            "cache_control": {"type": "ephemeral"}
+        }
+    ]
 
 # Initialize the Tavily client
 tavily_api_key = os.getenv("TAVILY_API_KEY")
@@ -667,16 +690,10 @@ async def generate_edit_instructions(file_path, file_content, instructions, proj
         </REPLACE>
         """
     
-        response = client.beta.prompt_caching.messages.create(
+        response = client_message.create(
             model=CODEEDITORMODEL,
             max_tokens=8000,
-            system=[
-                {
-                    "type": "text",
-                    "text": system_prompt,
-                    "cache_control": {"type": "ephemeral"}
-                }
-            ],
+            system=system_body(system_prompt),
             messages=[
                 {"role": "user", "content": "Generate SEARCH/REPLACE blocks for the necessary changes."}
             ],
@@ -1230,16 +1247,10 @@ async def send_to_ai_for_executing(code, execution_result):
         IMPORTANT: PROVIDE ONLY YOUR ANALYSIS AND OBSERVATIONS. DO NOT INCLUDE ANY PREFACING STATEMENTS OR EXPLANATIONS OF YOUR ROLE.
         """
 
-        response = client.beta.prompt_caching.messages.create(
+        response = client_message.create(
             model=CODEEXECUTIONMODEL,
             max_tokens=2000,
-            system=[
-                {
-                    "type": "text",
-                    "text": system_prompt,
-                    "cache_control": {"type": "ephemeral"}
-                }
-            ],
+            system=system_body(system_prompt),
             messages=[
                 {"role": "user", "content": f"Analyze this code execution from the 'code_execution_env' virtual environment:\n\nCode:\n{code}\n\nExecution Result:\n{execution_result}"}
             ],
@@ -1758,21 +1769,10 @@ async def chat_with_claude(user_input, image_path=None, current_iteration=None, 
     for attempt in range(max_retries):
         try:
             # MAINMODEL call with prompt caching
-            response = client.beta.prompt_caching.messages.create(
+            response = client_message.create(
                 model=MAINMODEL,
                 max_tokens=8000,
-                system=[
-                    {
-                        "type": "text",
-                        "text": update_system_prompt(current_iteration, max_iterations),
-                        "cache_control": {"type": "ephemeral"}
-                    },
-                    {
-                        "type": "text",
-                        "text": json.dumps(tools),
-                        "cache_control": {"type": "ephemeral"}
-                    }
-                ],
+                system=mainmodel_system_body(current_iteration, max_iterations, tools),
                 messages=messages,
                 tools=tools,
                 tool_choice={"type": "auto"},
