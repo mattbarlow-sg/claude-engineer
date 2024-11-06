@@ -31,6 +31,7 @@ import mimetypes
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import subprocess
 import shutil
+from sg_tools import Context, ServiceLookupLocal
 from typing import AsyncIterable
 
 # Configure logging
@@ -352,6 +353,7 @@ You are Claude, an AI assistant powered by Anthropic's Claude-3.5-Sonnet model, 
 9. Running shell commands.
 </capabilities>
 
+You are an expert at automating and interacting with cloud infrastructure. Tools like service_lookup enable you to retrieve information about software services running in the account.
 Available tools and their optimal use cases:
 
 <tools>
@@ -391,6 +393,7 @@ Available tools and their optimal use cases:
 9. scan_folder: Scan a specified folder and create a Markdown file with the contents of all coding text files, excluding binary files and common ignored folders. Use this tool to generate comprehensive documentation of project structures.
 10. run_shell_command: Execute a shell command and return its output. Use this tool when you need to run system commands or interact with the operating system. Ensure the command is safe and appropriate for the current operating system.
 IMPORTANT: Use this tool to install dependencies in the code_execution_env when using the execute_code tool.
+11. service_lookup: Retrieve information from the service registry about microservices running in the account.
 </tools>
 
 <tool_usage_guidelines>
@@ -1111,6 +1114,14 @@ def tavily_search(query):
     except Exception as e:
         return f"Error performing search: {str(e)}"
 
+def service_lookup(query=""):
+    context = Context(ServiceLookupLocal())
+    try:
+        response = context.service_lookup()
+        return response
+    except Exception as e:
+        return f"Error performing service registry search: {str(e)}"
+
 def stop_process(process_id):
     global running_processes
     if process_id in running_processes:
@@ -1495,6 +1506,19 @@ tools = [
         }
     },
     {
+        "name": "service_lookup",
+        "description": "Retrieve information about software services that are running in the account.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "A service to search for. If left out will return data on all services."
+                }
+            }
+        }
+    },
+    {
         "name": "run_shell_command",
         "description": "Execute a shell command and return its output. This tool should be used when you need to run system commands or interact with the operating system. It will return the standard output, standard error, and return code of the executed command.",
         "input_schema": {
@@ -1654,6 +1678,8 @@ async def execute_tool(tool_name: str, tool_input: Dict[str, Any]) -> Dict[str, 
             result = list_files(tool_input.get("path", "."))
         elif tool_name == "tavily_search":
             result = tavily_search(tool_input["query"])
+        elif tool_name == "service_lookup":
+            result = service_lookup(tool_input.get("query", ""))
         elif tool_name == "stop_process":
             result = stop_process(tool_input["process_id"])
         elif tool_name == "execute_code":
