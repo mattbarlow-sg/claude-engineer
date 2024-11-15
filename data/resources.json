@@ -1,0 +1,141 @@
+{
+  "resources": [
+    {
+      "resource": {
+        "type": "pulumi:pulumi:Stack",
+        "urn": "urn:pulumi:dev::my-stack::pulumi:pulumi:Stack::my-stack-dev",
+        "custom": false,
+        "delete": false,
+        "dependencies": [],
+        "outputs": {}
+      }
+    },
+    {
+      "resource": {
+        "id": "example-ec2-instance",
+        "type": "aws:ec2/instance:Instance",
+        "urn": "urn:pulumi:dev::my-stack::aws:ec2/instance:Instance::example-ec2-instance",
+        "custom": true,
+        "delete": false,
+        "dependencies": [
+          "urn:pulumi:dev::my-stack::aws:ec2/vpc:Vpc::example-vpc",
+          "urn:pulumi:dev::my-stack::aws:ec2/subnet:Subnet::example-subnet"
+        ],
+        "inputs": {
+          "instanceType": "t2.micro",
+          "ami": "ami-0abcdef1234567890",
+          "tags": {
+            "Service": "UserService"
+          }
+        },
+        "outputs": {
+          "id": "i-0abc1234def56789",
+          "publicIp": "54.123.45.67",
+          "privateIp": "10.0.1.10",
+          "arn": "arn:aws:ec2:us-east-1:123456789012:instance/i-0abc1234def56789"
+        }
+      }
+    },
+    {
+      "resource": {
+        "id": "database-server",
+        "type": "aws:ec2/instance:Instance",
+        "urn": "urn:pulumi:dev::my-stack::aws:ec2/instance:Instance::database-server",
+        "custom": true,
+        "delete": false,
+        "dependencies": [
+          "urn:pulumi:dev::my-stack::aws:ec2/vpc:Vpc::example-vpc",
+          "urn:pulumi:dev::my-stack::aws:ec2/subnet:Subnet::example-db-subnet",
+          "urn:pulumi:dev::my-stack::aws:ec2/securityGroup:SecurityGroup::database-sg"
+        ],
+        "inputs": {
+          "instanceType": "t3.medium",
+          "ami": "ami-0abcdef1234567890",
+          "keyName": "my-key-pair",
+          "tags": {
+            "Service": "VideoService"
+          }
+        },
+        "outputs": {
+          "id": "i-0def56789abc1234",
+          "publicIp": "54.234.56.78",
+          "privateIp": "10.0.2.5",
+          "arn": "arn:aws:ec2:us-east-1:123456789012:instance/i-0def56789abc1234"
+        }
+      }
+    },
+    {
+      "resource": {
+        "id": "web-server",
+        "type": "aws:ec2/instance:Instance",
+        "urn": "urn:pulumi:dev::my-stack::aws:ec2/instance:Instance::web-server",
+        "custom": true,
+        "delete": false,
+        "dependencies": [
+          "urn:pulumi:dev::my-stack::aws:ec2/vpc:Vpc::example-vpc",
+          "urn:pulumi:dev::my-stack::aws:ec2/subnet:Subnet::example-public-subnet",
+          "urn:pulumi:dev::my-stack::aws:ec2/securityGroup:SecurityGroup::web-sg"
+        ],
+        "inputs": {
+          "instanceType": "t3a.micro",
+          "ami": "ami-0abcdef1234567890",
+          "tags": {
+            "Service": "RecommendationService"
+          }
+        },
+        "outputs": {
+          "id": "i-0ghi56789jkl0123",
+          "publicIp": "52.12.34.56",
+          "privateIp": "10.0.0.25",
+          "arn": "arn:aws:ec2:us-west-2:123456789012:instance/i-0ghi56789jkl0123"
+        }
+      }
+    },
+    {
+      "resource": {
+        "id": "example-vpc",
+        "type": "aws:ec2/vpc:Vpc",
+        "urn": "urn:pulumi:dev::my-stack::aws:ec2/vpc:Vpc::example-vpc",
+        "custom": true,
+        "delete": false,
+        "dependencies": [],
+        "inputs": {
+          "cidrBlock": "10.0.0.0/16",
+          "tags": {
+            "Name": "example-vpc"
+          }
+        },
+        "outputs": {
+          "id": "vpc-0abc1234def56789",
+          "arn": "arn:aws:ec2:us-east-1:123456789012:vpc/vpc-0abc1234def56789"
+        }
+      }
+    },
+    {
+      "resource": {
+        "id": "example-subnet",
+        "type": "aws:ec2/subnet:Subnet",
+        "urn": "urn:pulumi:dev::my-stack::aws:ec2/subnet:Subnet::example-subnet",
+        "custom": true,
+        "delete": false,
+        "dependencies": [
+          "urn:pulumi:dev::my-stack::aws:ec2/vpc:Vpc::example-vpc"
+        ],
+        "inputs": {
+          "vpcId": "vpc-0abc1234def56789",
+          "cidrBlock": "10.0.1.0/24",
+          "availabilityZone": "us-east-1a",
+          "tags": {
+            "Service": "PaymentService"
+          }
+        },
+        "outputs": {
+          "id": "subnet-0abc1234def56789",
+          "arn": "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-0abc1234def56789"
+        }
+      }
+    }
+  ],
+  "region": "us-east-1",
+  "version": 5
+}
