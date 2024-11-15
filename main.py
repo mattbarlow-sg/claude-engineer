@@ -31,7 +31,7 @@ import mimetypes
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import subprocess
 import shutil
-from sg_tools import Context, ServiceLookupLocal
+from sg_tools import Context, CustomerOneLookup
 from typing import AsyncIterable
 
 # Configure logging
@@ -353,7 +353,7 @@ You are Claude, an AI assistant powered by Anthropic's Claude-3.5-Sonnet model, 
 9. Running shell commands.
 </capabilities>
 
-You are an expert at automating and interacting with cloud infrastructure. Tools like service_lookup enable you to retrieve information about software services running in the account.
+You are an expert at automating and interacting with cloud infrastructure. Tools like service_lookup enable you to retrieve information about software services running in the account, and resource_lookup allows you to view data about AWS resources.
 Available tools and their optimal use cases:
 
 <tools>
@@ -394,6 +394,8 @@ Available tools and their optimal use cases:
 10. run_shell_command: Execute a shell command and return its output. Use this tool when you need to run system commands or interact with the operating system. Ensure the command is safe and appropriate for the current operating system.
 IMPORTANT: Use this tool to install dependencies in the code_execution_env when using the execute_code tool.
 11. service_lookup: Retrieve information from the service registry about microservices running in the account.
+12. resource_lookup: Retrieve information from the resource inventory service about resources active in the account.
+13. code_path: Provide a github URL, and receive a path on the filesystem to the codebase.
 </tools>
 
 <tool_usage_guidelines>
@@ -1115,12 +1117,28 @@ def tavily_search(query):
         return f"Error performing search: {str(e)}"
 
 def service_lookup(query=""):
-    context = Context(ServiceLookupLocal())
+    context = Context(CustomerOneLookup())
     try:
         response = context.service_lookup()
         return response
     except Exception as e:
         return f"Error performing service registry search: {str(e)}"
+
+def resource_lookup(query=None):
+    context = Context(CustomerOneLookup())
+    try:
+        response = context.resource_lookup(filter_criteria=query)
+        return response
+    except Exception as e:
+        return f"Error performing resource lookup: {str(e)}"
+
+def code_path(github_url):
+    context = Context(CustomerOneLookup())
+    try:
+        response = context.code_path(github_url)
+        return response
+    except Exception as e:
+        return f"Error performing code path lookup: {str(e)}"
 
 def stop_process(process_id):
     global running_processes
@@ -1519,6 +1537,32 @@ tools = [
         }
     },
     {
+        "name": "resource_lookup",
+        "description": "Retrieve information about AWS Cloud resources running in the account.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "A service name or other search string. If left out will return all resource data."
+                }
+            }
+        }
+    },
+    {
+        "name": "code_path",
+        "description": "Provide a github url and receive the filesystem path to the code repository. Useful with the service_lookup, list_files, and read_multiple_files tools.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "github_url": {
+                    "type": "string",
+                    "description": "A github repo URL which can be obtained from the service_lookup tool."
+                }
+            }
+        }
+    },
+    {
         "name": "run_shell_command",
         "description": "Execute a shell command and return its output. This tool should be used when you need to run system commands or interact with the operating system. It will return the standard output, standard error, and return code of the executed command.",
         "input_schema": {
@@ -1680,6 +1724,10 @@ async def execute_tool(tool_name: str, tool_input: Dict[str, Any]) -> Dict[str, 
             result = tavily_search(tool_input["query"])
         elif tool_name == "service_lookup":
             result = service_lookup(tool_input.get("query", ""))
+        elif tool_name == "resource_lookup":
+            result = resource_lookup(tool_input.get("query", None))
+        elif tool_name == "code_path":
+            result = code_path(tool_input["github_url"])
         elif tool_name == "stop_process":
             result = stop_process(tool_input["process_id"])
         elif tool_name == "execute_code":
